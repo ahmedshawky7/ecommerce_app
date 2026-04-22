@@ -57,7 +57,7 @@ Use the following credentials to log into the app:
 
 ```bash
 git clone https://github.com/ahmedshawky7/ecommerce_app.git
-cd ecommerce-flutter-app
+cd ecommerce_app
 ```
 
 ### 2. Install dependencies
