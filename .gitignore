@@ -3,22 +3,31 @@
 .env.local
 *.env
 
-# Docker
-docker-compose.override.yml
+# Application Properties (with secrets)
+backend/src/main/resources/application.properties
 
-# Build artifacts
-backend/target/
-frontend/build/
-frontend/.dart_tool/
+# Logs
+*.log
+logs/
 
 # IDE
 .idea/
 .vscode/
 *.iml
+*.classpath
+*.project
+
+# Build
+target/
+build/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log

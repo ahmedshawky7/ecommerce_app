@@ -27,11 +27,13 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final NotificationProducer notificationProducer;
+    private final StripeService stripeService;
 
     // ============ Checkout ============
     @Transactional
     @CacheEvict(value = "carts", key = "#userEmail")
-    public OrderResponse checkout(String userEmail, CheckoutRequest request) {
+    public CheckoutResponse checkout(String userEmail, CheckoutRequest request) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -50,8 +52,8 @@ public class OrderService {
             }
             if (product.getStockQuantity() < item.getQuantity()) {
                 throw new IllegalArgumentException(
-                    "Not enough stock for '" + product.getName() + 
-                    "'. Available: " + product.getStockQuantity());
+                        "Not enough stock for '" + product.getName() +
+                                "'. Available: " + product.getStockQuantity());
             }
         }
 
@@ -95,7 +97,39 @@ public class OrderService {
         cart.getItems().clear();
         cartRepository.save(cart);
 
-        return toResponse(savedOrder);
+        // 5. Create Stripe PaymentIntent
+        try {
+            // Stripe بياخد المبلغ بالسنت (مثلاً 10.00 دولار = 1000)
+            long amountInCents = totalAmount.multiply(BigDecimal.valueOf(100)).longValue();
+            var paymentIntent = stripeService.createPaymentIntent(amountInCents, "usd", savedOrder.getId());
+            // تحديث الـ Order بالـ paymentIntentId
+            savedOrder.setPaymentIntentId(paymentIntent.getId());
+            orderRepository.save(savedOrder);
+
+            // 6. (اختياري) نبعت إيميل تأكيد الطلب هنا لو الدفع COD، أو نأجله للـ Webhook لو
+            // Stripe
+            // هنشيل الإيميل من هنا ونخليه في الـ Webhook بعد ما الدفع ينجح
+            /*
+             * NotificationMessage notification = new NotificationMessage(
+             * user.getEmail(),
+             * "Order Confirmation - " + savedOrder.getOrderNumber(),
+             * "Thank you for your order!\n\n" +
+             * "Order Number: " + savedOrder.getOrderNumber() + "\n" +
+             * "Total Amount: $" + savedOrder.getTotalAmount() + "\n" +
+             * "Shipping Address: " + savedOrder.getShippingAddress() + "\n\n" +
+             * "We will notify you once your order is shipped.");
+             * notificationProducer.sendNotification(notification);
+             */
+
+            return new CheckoutResponse(
+                    savedOrder.getId(),
+                    savedOrder.getOrderNumber(),
+                    paymentIntent.getClientSecret(),
+                    savedOrder.getTotalAmount());
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create payment intent: " + e.getMessage());
+        }
     }
 
     // ============ Get User Orders ============
@@ -182,6 +216,98 @@ public class OrderService {
         return orderNumber;
     }
 
+    // ============ Create Stripe Checkout Session ============
+    @Transactional
+    @CacheEvict(value = "carts", key = "#userEmail")
+    public com.example.ecommerce.dto.CheckoutSessionResponse createCheckoutSession(
+            String userEmail,
+            com.example.ecommerce.dto.CheckoutRequest request,
+            String successUrl,
+            String cancelUrl) {
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Cart cart = cartRepository.findByUserIdWithItems(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
+
+        if (cart.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Cart is empty");
+        }
+
+        // Validate stock
+        for (CartItem item : cart.getItems()) {
+            Product product = item.getProduct();
+            if (!product.isActive()) {
+                throw new IllegalArgumentException("Product '" + product.getName() + "' is not available");
+            }
+            if (product.getStockQuantity() < item.getQuantity()) {
+                throw new IllegalArgumentException(
+                        "Not enough stock for '" + product.getName() +
+                                "'. Available: " + product.getStockQuantity());
+            }
+        }
+
+        // Create Order (PENDING)
+        Order order = Order.builder()
+                .orderNumber(generateOrderNumber())
+                .user(user)
+                .status(OrderStatus.PENDING)
+                .shippingAddress(request.shippingAddress())
+                .phone(request.phone())
+                .paymentMethod("STRIPE")
+                .build();
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (CartItem cartItem : cart.getItems()) {
+            Product product = cartItem.getProduct();
+
+            OrderItem orderItem = OrderItem.builder()
+                    .order(order)
+                    .product(product)
+                    .productName(product.getName())
+                    .unitPrice(product.getPrice())
+                    .quantity(cartItem.getQuantity())
+                    .subtotal(product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
+                    .build();
+
+            order.getItems().add(orderItem);
+            totalAmount = totalAmount.add(orderItem.getSubtotal());
+
+            product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
+            productRepository.save(product);
+        }
+
+        order.setTotalAmount(totalAmount);
+        Order savedOrder = orderRepository.save(order);
+
+        try {
+            var session = stripeService.createCheckoutSession(
+                    new java.util.ArrayList<>(cart.getItems()),
+                    savedOrder.getId(),
+                    successUrl,
+                    cancelUrl);
+
+            // Save session ID
+            savedOrder.setPaymentIntentId(session.getId());
+            orderRepository.save(savedOrder);
+
+            // Clear cart
+            cartItemRepository.deleteByCartId(cart.getId());
+            cart.getItems().clear();
+            cartRepository.save(cart);
+
+            return new com.example.ecommerce.dto.CheckoutSessionResponse(
+                    session.getId(),
+                    session.getUrl(),
+                    savedOrder.getId(),
+                    savedOrder.getOrderNumber());
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create checkout session: " + e.getMessage());
+        }
+    }
+
     private OrderResponse toResponse(Order order) {
         List<OrderItemResponse> items = order.getItems().stream()
                 .map(item -> new OrderItemResponse(
@@ -191,8 +317,7 @@ public class OrderService {
                         item.getProduct().getImageUrl(),
                         item.getUnitPrice(),
                         item.getQuantity(),
-                        item.getSubtotal()
-                ))
+                        item.getSubtotal()))
                 .toList();
 
         return new OrderResponse(
@@ -205,7 +330,6 @@ public class OrderService {
                 order.getPaymentMethod(),
                 items,
                 order.getCreatedAt(),
-                order.getUpdatedAt()
-        );
+                order.getUpdatedAt());
     }
 }

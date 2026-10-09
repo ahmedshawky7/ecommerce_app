@@ -48,6 +48,9 @@ public class Order {
     @Column(name = "payment_method", length = 50)
     private String paymentMethod;
 
+    @Column(name = "payment_intent_id")
+    private String paymentIntentId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -58,7 +61,8 @@ public class Order {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (status == null) status = OrderStatus.PENDING;
+        if (status == null)
+            status = OrderStatus.PENDING;
     }
 
     @PreUpdate

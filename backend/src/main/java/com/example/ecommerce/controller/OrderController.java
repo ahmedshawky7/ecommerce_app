@@ -1,6 +1,7 @@
 package com.example.ecommerce.controller;
 
 import com.example.ecommerce.dto.CheckoutRequest;
+import com.example.ecommerce.dto.CheckoutResponse;
 import com.example.ecommerce.dto.OrderResponse;
 import com.example.ecommerce.dto.UpdateOrderStatusRequest;
 import com.example.ecommerce.service.OrderService;
@@ -22,8 +23,8 @@ public class OrderController {
 
     // ============ Customer Endpoints ============
 
-    @PostMapping("/checkout")
-    public ResponseEntity<OrderResponse> checkout(
+        @PostMapping("/checkout")
+    public ResponseEntity<CheckoutResponse> checkout(
             @Valid @RequestBody CheckoutRequest request,
             Authentication authentication) {
         return ResponseEntity.ok(orderService.checkout(authentication.getName(), request));
@@ -64,5 +65,15 @@ public class OrderController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateOrderStatusRequest request) {
         return ResponseEntity.ok(orderService.updateStatus(id, request.status()));
+    }
+
+        @PostMapping("/create-checkout-session")
+    public ResponseEntity<com.example.ecommerce.dto.CheckoutSessionResponse> createCheckoutSession(
+            @Valid @RequestBody CheckoutRequest request,
+            @RequestParam String successUrl,
+            @RequestParam String cancelUrl,
+            Authentication authentication) {
+        return ResponseEntity.ok(orderService.createCheckoutSession(
+                authentication.getName(), request, successUrl, cancelUrl));
     }
 }
