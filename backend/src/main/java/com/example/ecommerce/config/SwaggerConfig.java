@@ -19,8 +19,11 @@ import org.springframework.context.annotation.Configuration;
             email = "ahmedeltabakh703@gmail.com"
         )
     ),
-    servers = {
-        @Server(url = "http://localhost:8080", description = "Local Development Server")
+        servers = {
+        @Server(url = "https://ecommerceapp-production-5c76.up.railway.app", 
+                description = "Production Server"),
+        @Server(url = "http://localhost:8080", 
+                description = "Local Development Server")
     }
 )
 @SecurityScheme(
