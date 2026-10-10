@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../cubit/auth_cubit.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -40,7 +41,10 @@ class _LoginPageState extends State<LoginPage> {
         listener: (context, state) {
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
             );
           }
           if (state is AuthAuthenticated) {
@@ -62,7 +66,9 @@ class _LoginPageState extends State<LoginPage> {
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: Card(
                   elevation: 8,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Form(
@@ -71,21 +77,28 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Icon(Icons.admin_panel_settings,
-                              size: 64, color: Theme.of(context).primaryColor),
+                          Icon(
+                            Icons.admin_panel_settings,
+                            size: 64,
+                            color: Theme.of(context).primaryColor,
+                          ),
                           const SizedBox(height: 16),
                           Text(
-                            'Admin Panel',
+                            'E-Commerce',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
-                                fontSize: 28, fontWeight: FontWeight.bold),
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Sign in to manage your store',
+                            'Sign in to continue',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
-                                fontSize: 14, color: Colors.grey[600]),
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
                           ),
                           const SizedBox(height: 32),
                           TextFormField(
@@ -112,11 +125,14 @@ class _LoginPageState extends State<LoginPage> {
                               prefixIcon: const Icon(Icons.lock_outlined),
                               border: const OutlineInputBorder(),
                               suffixIcon: IconButton(
-                                icon: Icon(_obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined),
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                ),
                                 onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword),
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
                               ),
                             ),
                             obscureText: _obscurePassword,
@@ -134,19 +150,56 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: isLoading ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                               child: isLoading
                                   ? const SizedBox(
                                       width: 24,
                                       height: 24,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 2, color: Colors.white),
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
                                     )
-                                  : Text('Login',
+                                  : Text(
+                                      'Login',
                                       style: GoogleFonts.poppins(
-                                          fontSize: 16, fontWeight: FontWeight.w600)),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Don't have an account? ",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const RegisterPage(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'Sign Up',
+                                  style: GoogleFonts.poppins(
+                                    color: const Color(0xFF6C63FF),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
