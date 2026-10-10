@@ -28,3 +28,13 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Backup
+*_backup/
+
+# Temp files
+all_code.txt
+*.tmp
+
+# Logs
+*.log

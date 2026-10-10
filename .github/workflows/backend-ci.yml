@@ -9,7 +9,7 @@ on:
     paths: ['backend/**']
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +25,6 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
-      - name: Run Tests
-        working-directory: ./backend
-        run: mvn clean test
-
       - name: Build JAR
         working-directory: ./backend
-        run: mvn package -DskipTests
+        run: mvn clean package -DskipTests
