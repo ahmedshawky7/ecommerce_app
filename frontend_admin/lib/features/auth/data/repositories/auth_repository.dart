@@ -28,6 +28,25 @@ class AuthRepository {
     }
   }
 
+    Future<UserModel> register({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.register,
+        data: {'username': username, 'email': email, 'password': password},
+      );
+      final user = UserModel.fromJson(response.data);
+      await SecureStorage.instance.saveToken(user.token);
+      await SecureStorage.instance.saveRefreshToken(user.refreshToken);
+      return user;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<void> logout() async {
     await SecureStorage.instance.clearAll();
   }

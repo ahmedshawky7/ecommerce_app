@@ -56,6 +56,10 @@ dependencies:
   fl_chart: ^0.69.2
   intl: ^0.19.0
   flutter_spinkit: ^5.2.1
+  badges: ^3.1.2
+  carousel_slider: ^5.0.0
+  flutter_rating_bar: ^4.0.1
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
