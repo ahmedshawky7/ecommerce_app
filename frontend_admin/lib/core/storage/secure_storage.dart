@@ -9,23 +9,24 @@ class SecureStorage {
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
-  Future<void> saveToken(String token) async {
-    await _storage.write(key: ApiConstants.tokenKey, value: token);
-  }
+  Future<void> saveToken(String token) async =>
+      await _storage.write(key: ApiConstants.tokenKey, value: token);
 
-  Future<String?> getToken() async {
-    return await _storage.read(key: ApiConstants.tokenKey);
-  }
+  Future<String?> getToken() async =>
+      await _storage.read(key: ApiConstants.tokenKey);
 
-  Future<void> saveRefreshToken(String token) async {
-    await _storage.write(key: ApiConstants.refreshTokenKey, value: token);
-  }
+  Future<void> saveRefreshToken(String token) async =>
+      await _storage.write(key: ApiConstants.refreshTokenKey, value: token);
 
-  Future<String?> getRefreshToken() async {
-    return await _storage.read(key: ApiConstants.refreshTokenKey);
-  }
+  Future<String?> getRefreshToken() async =>
+      await _storage.read(key: ApiConstants.refreshTokenKey);
 
-  Future<void> clearAll() async {
-    await _storage.deleteAll();
-  }
+  // New: save entire user JSON
+  Future<void> saveUserData(String userJson) async =>
+      await _storage.write(key: ApiConstants.userKey, value: userJson);
+
+  Future<String?> getUserData() async =>
+      await _storage.read(key: ApiConstants.userKey);
+
+  Future<void> clearAll() async => await _storage.deleteAll();
 }

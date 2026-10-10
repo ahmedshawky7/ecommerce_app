@@ -26,6 +26,15 @@ class UserModel {
     );
   }
 
+    Map<String, dynamic> toJson() => {
+        'id': id,
+        'email': email,
+        'username': username,
+        'role': role,
+        'token': token,
+        'refreshToken': refreshToken,
+      };
+
   bool get isAdmin => role == 'ADMIN';
   bool get isCustomer => role == 'CUSTOMER';
 }

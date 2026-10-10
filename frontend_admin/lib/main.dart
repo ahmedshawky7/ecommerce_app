@@ -10,7 +10,9 @@ void main() {
   runApp(
     MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => AuthCubit(AuthRepository())),
+        BlocProvider(
+          create: (_) => AuthCubit(AuthRepository())..checkAuthStatus(),
+        ),
         BlocProvider(create: (_) => CartCubit(CartRepository())),
       ],
       child: const AdminApp(),

@@ -11,10 +11,13 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> checkAuthStatus() async {
     final isLoggedIn = await _repository.isLoggedIn();
     if (isLoggedIn) {
-      emit(AuthUnauthenticated());
-    } else {
-      emit(AuthUnauthenticated());
+      final user = await _repository.getCurrentUser();
+      if (user != null) {
+        emit(AuthAuthenticated(user));
+        return;
+      }
     }
+    emit(AuthUnauthenticated());
   }
 
   Future<void> login({required String email, required String password}) async {
