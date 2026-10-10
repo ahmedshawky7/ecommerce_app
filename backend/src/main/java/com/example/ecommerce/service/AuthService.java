@@ -56,12 +56,13 @@ public class AuthService {
 
         var accessToken = jwtService.generateToken(user);
         var refreshToken = createRefreshToken(user);
-        return new AuthResponse(
-                accessToken,
-                refreshToken,
-                user.getEmail(),
-                user.getDisplayName(),
-                user.getId());
+     return new AuthResponse(
+        accessToken,
+        refreshToken,
+        user.getEmail(),
+        user.getDisplayName(),
+        user.getRole().name(),
+        user.getId());
     }
 
     @Transactional
@@ -75,11 +76,12 @@ public class AuthService {
         var accessToken = jwtService.generateToken(user);
         var refreshToken = createRefreshToken(user);
         return new AuthResponse(
-                accessToken,
-                refreshToken,
-                user.getEmail(),
-                user.getDisplayName(),
-                user.getId());
+        accessToken,
+        refreshToken,
+        user.getEmail(),
+        user.getDisplayName(),
+        user.getRole().name(),
+        user.getId());
     }
 
     private String createRefreshToken(User user) {
@@ -123,9 +125,10 @@ public class AuthService {
 
         return new AuthResponse(
                 newAccessToken,
-                refreshTokenValue, // نرجّع نفس الـ refresh token
+                refreshTokenValue, 
                 user.getEmail(),
                 user.getDisplayName(),
+                user.getRole().name(),
                 user.getId());
     }
 }
