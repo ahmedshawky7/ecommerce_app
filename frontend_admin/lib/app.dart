@@ -4,6 +4,8 @@ import 'core/theme/app_theme.dart';
 import 'core/widgets/main_layout.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/auth/presentation/pages/login_page.dart';
+import 'features/cart/data/repositories/cart_repository.dart';
+import 'features/cart/presentation/cubit/cart_cubit.dart';
 import 'features/products/presentation/pages/home_page.dart';
 
 class AdminApp extends StatelessWidget {
@@ -18,11 +20,14 @@ class AdminApp extends StatelessWidget {
       home: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           if (state is AuthAuthenticated) {
-            // Role-based routing
             if (state.user.isAdmin) {
               return const MainLayout(); // Admin Panel
             } else {
-              return const HomePage(); // Customer Home
+              // ← CartCubit مُتاح هنا في HomePage
+              return BlocProvider(
+                create: (_) => CartCubit(CartRepository()),
+                child: const HomePage(),
+              );
             }
           }
           return const LoginPage();
