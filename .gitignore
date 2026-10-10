@@ -3,9 +3,6 @@
 .env.local
 *.env
 
-# Application Properties (with secrets)
-backend/src/main/resources/application.properties
-
 # Logs
 *.log
 logs/
