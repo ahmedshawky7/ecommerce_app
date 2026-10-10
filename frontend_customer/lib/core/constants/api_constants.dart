@@ -1,8 +1,7 @@
 class ApiConstants {
   ApiConstants._();
 
-  // ⚠️ ملاحظة: لو بتشغل على محاكي Android، استبدل localhost بـ 10.0.2.2
-  static const String baseUrl = 'http://localhost:8080';
+  static const String baseUrl = 'https://ecommerceapp-production-5c76.up.railway.app';
   
   // Auth
   static const String register = '/api/auth/register';

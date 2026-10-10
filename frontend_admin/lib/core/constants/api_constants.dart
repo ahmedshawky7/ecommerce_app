@@ -1,7 +1,7 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'http://localhost:8080';
+  static const String baseUrl = 'https://ecommerceapp-production-5c76.up.railway.app';
   
   // Auth Endpoints
   static const String login = '/api/auth/login';

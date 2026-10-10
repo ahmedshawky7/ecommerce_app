@@ -93,9 +93,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "https://*.onrender.com",
-                "https://*.vercel.app",
-                "https://yourdomain.com" // Replace with your actual domain
-        ));
+                "https://*.railway.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
