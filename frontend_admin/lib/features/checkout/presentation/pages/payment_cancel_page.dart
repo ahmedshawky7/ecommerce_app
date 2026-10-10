@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PaymentCancelPage extends StatelessWidget {
-  const PaymentCancelPage({super.key});
+  final VoidCallback? onBackToHome;
+
+  const PaymentCancelPage({super.key, this.onBackToHome});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class PaymentCancelPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Your payment was not completed.\nYour cart items are still saved.',
+                'Your payment was not completed.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
@@ -45,12 +47,7 @@ class PaymentCancelPage extends StatelessWidget {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/',
-                      (route) => false,
-                    );
-                  },
+                  onPressed: onBackToHome ?? () => Navigator.of(context).pop(),
                   child: const Text('Try Again'),
                 ),
               ),

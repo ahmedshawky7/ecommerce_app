@@ -29,4 +29,14 @@ class SecureStorage {
       await _storage.read(key: ApiConstants.userKey);
 
   Future<void> clearAll() async => await _storage.deleteAll();
+
+    // Payment result flag
+  Future<void> savePaymentResult(String result) async =>
+      await _storage.write(key: 'payment_result', value: result);
+
+  Future<String?> getPaymentResult() async =>
+      await _storage.read(key: 'payment_result');
+
+  Future<void> clearPaymentResult() async =>
+      await _storage.delete(key: 'payment_result');
 }

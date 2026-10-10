@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PaymentSuccessPage extends StatelessWidget {
-  const PaymentSuccessPage({super.key});
+  final VoidCallback? onBackToHome;
+
+  const PaymentSuccessPage({super.key, this.onBackToHome});
 
   @override
   Widget build(BuildContext context) {
@@ -45,12 +47,7 @@ class PaymentSuccessPage extends StatelessWidget {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/',
-                      (route) => false,
-                    );
-                  },
+                  onPressed: onBackToHome ?? () => Navigator.of(context).pop(),
                   child: const Text('Back to Home'),
                 ),
               ),
