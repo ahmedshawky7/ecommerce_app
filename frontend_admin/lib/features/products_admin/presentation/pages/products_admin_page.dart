@@ -117,19 +117,26 @@ class _ProductsAdminPageState extends State<ProductsAdminPage> {
                     const SizedBox(width: 16),
                     ElevatedButton.icon(
                       onPressed: () async {
+                        final productsCubit = context
+                            .read<AdminProductsCubit>();
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => AdminCategoriesCubit(
-                                AdminCategoriesRepository(),
-                              )..loadCategories(),
+                            builder: (_) => MultiBlocProvider(
+                              providers: [
+                                BlocProvider.value(value: productsCubit),
+                                BlocProvider(
+                                  create: (_) => AdminCategoriesCubit(
+                                    AdminCategoriesRepository(),
+                                  )..loadCategories(),
+                                ),
+                              ],
                               child: const ProductFormPage(),
                             ),
                           ),
                         );
                         if (result == true && context.mounted) {
-                          context.read<AdminProductsCubit>().loadProducts();
+                          productsCubit.loadProducts();
                         }
                       },
                       icon: const Icon(Icons.add),
@@ -185,19 +192,25 @@ class _ProductsAdminPageState extends State<ProductsAdminPage> {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () async {
+                  final productsCubit = context.read<AdminProductsCubit>();
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => BlocProvider(
-                        create: (_) =>
-                            AdminCategoriesCubit(AdminCategoriesRepository())
-                              ..loadCategories(),
+                      builder: (_) => MultiBlocProvider(
+                        providers: [
+                          BlocProvider.value(value: productsCubit),
+                          BlocProvider(
+                            create: (_) => AdminCategoriesCubit(
+                              AdminCategoriesRepository(),
+                            )..loadCategories(),
+                          ),
+                        ],
                         child: const ProductFormPage(),
                       ),
                     ),
                   );
                   if (result == true && context.mounted) {
-                    context.read<AdminProductsCubit>().loadProducts();
+                    productsCubit.loadProducts();
                   }
                 },
                 icon: const Icon(Icons.add),
@@ -329,21 +342,28 @@ class _ProductsAdminPageState extends State<ProductsAdminPage> {
                                 color: Colors.blue,
                               ),
                               onPressed: () async {
+                                final productsCubit = context
+                                    .read<AdminProductsCubit>();
                                 final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => BlocProvider(
-                                      create: (_) => AdminCategoriesCubit(
-                                        AdminCategoriesRepository(),
-                                      )..loadCategories(),
+                                    builder: (_) => MultiBlocProvider(
+                                      providers: [
+                                        BlocProvider.value(
+                                          value: productsCubit,
+                                        ),
+                                        BlocProvider(
+                                          create: (_) => AdminCategoriesCubit(
+                                            AdminCategoriesRepository(),
+                                          )..loadCategories(),
+                                        ),
+                                      ],
                                       child: ProductFormPage(product: product),
                                     ),
                                   ),
                                 );
                                 if (result == true && context.mounted) {
-                                  context
-                                      .read<AdminProductsCubit>()
-                                      .loadProducts();
+                                  productsCubit.loadProducts();
                                 }
                               },
                             ),

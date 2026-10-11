@@ -55,6 +55,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
+
     if (_selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -67,41 +68,49 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
     setState(() => _isLoading = true);
 
-    final cubit = context.read<AdminProductsCubit>();
-    final price = double.tryParse(_priceController.text.trim()) ?? 0.0;
-    final stock = int.tryParse(_stockController.text.trim()) ?? 0;
+    try {
+      final cubit = context.read<AdminProductsCubit>();
+      final price = double.tryParse(_priceController.text.trim()) ?? 0.0;
+      final stock = int.tryParse(_stockController.text.trim()) ?? 0;
 
-    if (isEditing) {
-      await cubit.updateProduct(
-        id: widget.product!.id,
-        name: _nameController.text.trim(),
-        description: _descriptionController.text.trim(),
-        price: price,
-        stockQuantity: stock,
-        imageUrl: _imageUrl,
-        categoryId: _selectedCategoryId!,
-      );
-    } else {
-      await cubit.createProduct(
-        name: _nameController.text.trim(),
-        description: _descriptionController.text.trim(),
-        price: price,
-        stockQuantity: stock,
-        imageUrl: _imageUrl,
-        categoryId: _selectedCategoryId!,
-      );
-    }
+      if (isEditing) {
+        await cubit.updateProduct(
+          id: widget.product!.id,
+          name: _nameController.text.trim(),
+          description: _descriptionController.text.trim(),
+          price: price,
+          stockQuantity: stock,
+          imageUrl: _imageUrl,
+          categoryId: _selectedCategoryId!,
+        );
+      } else {
+        await cubit.createProduct(
+          name: _nameController.text.trim(),
+          description: _descriptionController.text.trim(),
+          price: price,
+          stockQuantity: stock,
+          imageUrl: _imageUrl,
+          categoryId: _selectedCategoryId!,
+        );
+      }
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final state = cubit.state;
-    if (state is AdminProductsError) {
+      final state = cubit.state;
+      if (state is AdminProductsError) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+        );
+      } else {
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
-    } else {
-      Navigator.pop(context, true);
     }
   }
 
@@ -202,7 +211,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 labelText: 'Stock Quantity *',
-                                prefixIcon: const Icon(Icons.inventory_2_outlined),
+                                prefixIcon: const Icon(
+                                  Icons.inventory_2_outlined,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -234,12 +245,14 @@ class _ProductFormPageState extends State<ProductFormPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          items: catState.categories.map<DropdownMenuItem<int>>(
-                            (cat) => DropdownMenuItem<int>(
-                              value: cat.id,
-                              child: Text(cat.name),
-                            ),
-                          ).toList(),
+                          items: catState.categories
+                              .map<DropdownMenuItem<int>>(
+                                (cat) => DropdownMenuItem<int>(
+                                  value: cat.id,
+                                  child: Text(cat.name),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (v) =>
                               setState(() => _selectedCategoryId = v),
                           validator: (v) =>
@@ -272,7 +285,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                                   ),
                                 )
                               : Text(
-                                  isEditing ? 'Update Product' : 'Create Product',
+                                  isEditing
+                                      ? 'Update Product'
+                                      : 'Create Product',
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
