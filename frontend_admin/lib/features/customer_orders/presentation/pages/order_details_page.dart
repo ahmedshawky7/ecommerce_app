@@ -63,24 +63,62 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   void _confirmCancel() {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Cancel Order?'),
         content: const Text(
-            'Are you sure you want to cancel this order? This action cannot be undone.'),
+          'Are you sure you want to cancel this order? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('No'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<OrdersCubit>().cancelOrder(_order!.id).then((_) {
-                _loadOrder();
-              });
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+
+              // ⚡ اقرأ الـ Cubit قبل العملية
+              final ordersCubit = context.read<OrdersCubit>();
+
+              // Show loading
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Cancelling order...'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+
+              await ordersCubit.cancelOrder(_order!.id);
+
+              if (!mounted) return;
+
+              final state = ordersCubit.state;
+
+              if (state is OrdersError) {
+                // فشل الإلغاء
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              } else if (state is OrderActionSuccess) {
+                // نجح الإلغاء
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                // Reload order details
+                await _loadOrder();
+              }
             },
-            child: const Text('Yes, Cancel',
-                style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Yes, Cancel',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -89,7 +127,10 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final currencyFormat = NumberFormat.currency(
+      symbol: '\$',
+      decimalDigits: 2,
+    );
     final dateFormat = DateFormat('MMM dd, yyyy • HH:mm');
 
     if (_loading) {
@@ -197,17 +238,21 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                           width: 60,
                           height: 60,
                           color: Colors.grey[100],
-                          child: item.productImageUrl != null &&
+                          child:
+                              item.productImageUrl != null &&
                                   item.productImageUrl!.isNotEmpty
                               ? CachedNetworkImage(
                                   imageUrl: item.productImageUrl!,
                                   fit: BoxFit.cover,
                                   errorWidget: (_, __, ___) => Icon(
-                                      Icons.image_not_supported_outlined,
-                                      color: Colors.grey[400]),
+                                    Icons.image_not_supported_outlined,
+                                    color: Colors.grey[400],
+                                  ),
                                 )
-                              : Icon(Icons.image_outlined,
-                                  color: Colors.grey[400]),
+                              : Icon(
+                                  Icons.image_outlined,
+                                  color: Colors.grey[400],
+                                ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -236,9 +281,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                       ),
                       Text(
                         currencyFormat.format(item.subtotal),
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -324,7 +367,10 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     }
   }
 
-  Widget _buildSection({required String title, required List<Widget> children}) {
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -366,10 +412,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             width: 120,
             child: Text(
               label,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
+              style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
             ),
           ),
           Expanded(

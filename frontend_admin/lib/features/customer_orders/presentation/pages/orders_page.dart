@@ -40,7 +40,10 @@ class _OrdersPageState extends State<OrdersPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final currencyFormat = NumberFormat.currency(
+      symbol: '\$',
+      decimalDigits: 2,
+    );
     final dateFormat = DateFormat('MMM dd, yyyy • HH:mm');
 
     return BlocConsumer<OrdersCubit, OrdersState>(
@@ -53,7 +56,9 @@ class _OrdersPageState extends State<OrdersPage> {
         if (state is OrderActionSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.message), backgroundColor: Colors.green),
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       },
@@ -111,13 +116,21 @@ class _OrdersPageState extends State<OrdersPage> {
                 final order = state.orders[index];
                 final statusColor = _getStatusColor(order.status);
                 return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    final ordersCubit = context.read<OrdersCubit>();
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => OrderDetailsPage(orderId: order.id),
+                        builder: (_) => BlocProvider.value(
+                          value: ordersCubit,
+                          child: OrderDetailsPage(orderId: order.id),
+                        ),
                       ),
                     );
+                    // Reload after returning (in case cancel happened)
+                    if (context.mounted) {
+                      ordersCubit.loadOrders();
+                    }
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -147,7 +160,9 @@ class _OrdersPageState extends State<OrdersPage> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: statusColor.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(20),
@@ -177,8 +192,11 @@ class _OrdersPageState extends State<OrdersPage> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.shopping_bag_outlined,
-                                    size: 18, color: Colors.grey),
+                                const Icon(
+                                  Icons.shopping_bag_outlined,
+                                  size: 18,
+                                  color: Colors.grey,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   '${order.items.length} item${order.items.length != 1 ? 's' : ''}',
