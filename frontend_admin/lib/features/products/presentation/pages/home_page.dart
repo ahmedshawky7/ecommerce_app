@@ -12,9 +12,9 @@ import '../cubit/products_cubit.dart';
 import 'products_page.dart';
 import '../../../checkout/presentation/pages/payment_success_page.dart';
 import '../../../checkout/presentation/pages/payment_cancel_page.dart';
-import '../../../orders/data/repositories/orders_repository.dart';
-import '../../../orders/presentation/cubit/orders_cubit.dart';
-import '../../../orders/presentation/pages/orders_page.dart';
+import '../../../customer_orders/data/repositories/orders_repository.dart';
+import '../../../customer_orders/presentation/cubit/orders_cubit.dart';
+import '../../../customer_orders/presentation/pages/orders_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
 class HomePage extends StatefulWidget {
