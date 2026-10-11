@@ -12,6 +12,13 @@ import '../../features/users/presentation/pages/users_page.dart';
 import '../../features/analytics/data/repositories/analytics_repository.dart';
 import '../../features/analytics/presentation/cubit/analytics_cubit.dart';
 import '../../features/analytics/presentation/pages/analytics_page.dart';
+import '../../features/products_admin/data/repositories/admin_categories_repository.dart';
+import '../../features/products_admin/data/repositories/admin_products_repository.dart';
+import '../../features/products_admin/presentation/cubit/admin_categories_cubit.dart';
+import '../../features/products_admin/presentation/cubit/admin_products_cubit.dart';
+import '../../features/products_admin/presentation/pages/categories_admin_page.dart';
+import '../../features/products_admin/presentation/pages/products_admin_page.dart';
+
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -22,8 +29,14 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
 
-
-  final _titles = const ['Dashboard', 'Orders', 'Users', 'Analytics'];
+  final _titles = const [
+    'Dashboard',
+    'Orders',
+    'Users',
+    'Products',
+    'Categories',
+    'Analytics',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +55,19 @@ class _MainLayoutState extends State<MainLayout> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
-                        const Icon(Icons.shopping_bag,
-                            color: Color(0xFF6C63FF), size: 32),
+                        const Icon(
+                          Icons.shopping_bag,
+                          color: Color(0xFF6C63FF),
+                          size: 32,
+                        ),
                         const SizedBox(width: 12),
                         Text(
                           'Shop Admin',
                           style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold),
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -59,14 +76,21 @@ class _MainLayoutState extends State<MainLayout> {
                   _buildMenuItem(0, Icons.dashboard_outlined, 'Dashboard'),
                   _buildMenuItem(1, Icons.receipt_long_outlined, 'Orders'),
                   _buildMenuItem(2, Icons.people_outline, 'Users'),
-                  _buildMenuItem(3, Icons.analytics_outlined, 'Analytics'),
+                  _buildMenuItem(3, Icons.inventory_2_outlined, 'Products'),
+                  _buildMenuItem(4, Icons.category_outlined, 'Categories'),
+                  _buildMenuItem(5, Icons.analytics_outlined, 'Analytics'),
                   const Spacer(),
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: ListTile(
-                      leading: const Icon(Icons.logout, color: Colors.redAccent),
-                      title: Text('Logout',
-                          style: GoogleFonts.poppins(color: Colors.redAccent)),
+                      leading: const Icon(
+                        Icons.logout,
+                        color: Colors.redAccent,
+                      ),
+                      title: Text(
+                        'Logout',
+                        style: GoogleFonts.poppins(color: Colors.redAccent),
+                      ),
                       onTap: () => context.read<AuthCubit>().logout(),
                     ),
                   ),
@@ -91,7 +115,9 @@ class _MainLayoutState extends State<MainLayout> {
                       Text(
                         _titles[_selectedIndex],
                         style: GoogleFonts.poppins(
-                            fontSize: 22, fontWeight: FontWeight.w600),
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const Spacer(),
                       const CircleAvatar(
@@ -102,17 +128,16 @@ class _MainLayoutState extends State<MainLayout> {
                   ),
                 ),
                 // Page Content
-                 Expanded(child: _buildPage()),
+                Expanded(child: _buildPage()),
               ],
             ),
           ),
         ],
       ),
-   
     );
   }
 
-  Widget _buildPage() {
+   Widget _buildPage() {
     switch (_selectedIndex) {
       case 0:
         return const DashboardPage();
@@ -128,6 +153,16 @@ class _MainLayoutState extends State<MainLayout> {
         );
       case 3:
         return BlocProvider(
+          create: (_) => AdminProductsCubit(AdminProductsRepository()),
+          child: const ProductsAdminPage(),
+        );
+      case 4:
+        return BlocProvider(
+          create: (_) => AdminCategoriesCubit(AdminCategoriesRepository()),
+          child: const CategoriesAdminPage(),
+        );
+      case 5:
+        return BlocProvider(
           create: (_) => AnalyticsCubit(AnalyticsRepository()),
           child: const AnalyticsPage(),
         );
@@ -139,12 +174,15 @@ class _MainLayoutState extends State<MainLayout> {
   Widget _buildMenuItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
     return Material(
-      color: isSelected 
-          ? const Color(0xFF6C63FF).withOpacity(0.2) 
+      color: isSelected
+          ? const Color(0xFF6C63FF).withOpacity(0.2)
           : Colors.transparent,
       child: ListTile(
-        leading: Icon(icon,
-            color: isSelected ? Colors.white : Colors.white54, size: 22),
+        leading: Icon(
+          icon,
+          color: isSelected ? Colors.white : Colors.white54,
+          size: 22,
+        ),
         title: Text(
           label,
           style: GoogleFonts.poppins(
