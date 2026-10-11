@@ -7,6 +7,7 @@ import '../cubit/admin_products_cubit.dart';
 import 'product_form_page.dart';
 import '../../data/repositories/admin_categories_repository.dart';
 import '../cubit/admin_categories_cubit.dart';
+
 class ProductsAdminPage extends StatefulWidget {
   const ProductsAdminPage({super.key});
 
@@ -119,10 +120,15 @@ class _ProductsAdminPageState extends State<ProductsAdminPage> {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ProductFormPage(),
+                            builder: (_) => BlocProvider(
+                              create: (_) => AdminCategoriesCubit(
+                                AdminCategoriesRepository(),
+                              )..loadCategories(),
+                              child: const ProductFormPage(),
+                            ),
                           ),
                         );
-                        if (result == true) {
+                        if (result == true && context.mounted) {
                           context.read<AdminProductsCubit>().loadProducts();
                         }
                       },
@@ -181,7 +187,14 @@ class _ProductsAdminPageState extends State<ProductsAdminPage> {
                 onPressed: () async {
                   final result = await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ProductFormPage()),
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider(
+                        create: (_) =>
+                            AdminCategoriesCubit(AdminCategoriesRepository())
+                              ..loadCategories(),
+                        child: const ProductFormPage(),
+                      ),
+                    ),
                   );
                   if (result == true && context.mounted) {
                     context.read<AdminProductsCubit>().loadProducts();
@@ -319,8 +332,12 @@ class _ProductsAdminPageState extends State<ProductsAdminPage> {
                                 final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        ProductFormPage(product: product),
+                                    builder: (_) => BlocProvider(
+                                      create: (_) => AdminCategoriesCubit(
+                                        AdminCategoriesRepository(),
+                                      )..loadCategories(),
+                                      child: ProductFormPage(product: product),
+                                    ),
                                   ),
                                 );
                                 if (result == true && context.mounted) {

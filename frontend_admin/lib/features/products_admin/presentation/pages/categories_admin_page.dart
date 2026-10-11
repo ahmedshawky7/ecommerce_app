@@ -20,87 +20,97 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
     context.read<AdminCategoriesCubit>().loadCategories();
   }
 
-  void _showCategoryDialog({dynamic existing}) {
+   void _showCategoryDialog({dynamic existing}) {
     final nameController = TextEditingController(text: existing?.name ?? '');
     final descController =
         TextEditingController(text: existing?.description ?? '');
     String? imageUrl = existing?.imageUrl;
 
+    // ⚡ اقرأ الـ Cubit قبل ما نفتح الـ Dialog
+    final categoriesCubit = context.read<AdminCategoriesCubit>();
+
     showDialog(
       context: context,
       builder: (dialogContext) {
-        return BlocProvider(
-          create: (_) => ImageUploadCubit(ImageUploadRepository()),
-          child: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return AlertDialog(
-                title: Text(existing == null ? 'Add Category' : 'Edit Category'),
-                content: SingleChildScrollView(
-                  child: SizedBox(
-                    width: 400,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextField(
-                          controller: nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Category Name *',
-                            border: OutlineInputBorder(),
+        return BlocProvider.value(
+          value: categoriesCubit, // ← نمرر الـ Cubit للـ Dialog
+          child: BlocProvider(
+            create: (_) => ImageUploadCubit(ImageUploadRepository()),
+            child: StatefulBuilder(
+              builder: (dialogContext, setDialogState) {
+                return AlertDialog(
+                  title:
+                      Text(existing == null ? 'Add Category' : 'Edit Category'),
+                  content: SingleChildScrollView(
+                    child: SizedBox(
+                      width: 400,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            controller: nameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Category Name *',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: descController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            border: OutlineInputBorder(),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: descController,
+                            maxLines: 3,
+                            decoration: const InputDecoration(
+                              labelText: 'Description',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: TextEditingController(text: imageUrl),
-                          decoration: const InputDecoration(
-                            labelText: 'Image URL (optional)',
-                            border: OutlineInputBorder(),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller:
+                                TextEditingController(text: imageUrl),
+                            decoration: const InputDecoration(
+                              labelText: 'Image URL (optional)',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (v) => imageUrl = v.trim(),
                           ),
-                          onChanged: (v) => imageUrl = v.trim(),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: const Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (nameController.text.trim().isEmpty) return;
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (nameController.text.trim().isEmpty) return;
 
-                      final cubit = context.read<AdminCategoriesCubit>();
-                      if (existing == null) {
-                        await cubit.createCategory(
-                          name: nameController.text.trim(),
-                          description: descController.text.trim(),
-                          imageUrl: imageUrl,
-                        );
-                      } else {
-                        await cubit.updateCategory(
-                          id: existing.id,
-                          name: nameController.text.trim(),
-                          description: descController.text.trim(),
-                          imageUrl: imageUrl,
-                        );
-                      }
-                      if (context.mounted) Navigator.pop(dialogContext);
-                    },
-                    child: Text(existing == null ? 'Create' : 'Update'),
-                  ),
-                ],
-              );
-            },
+                        // ⚡ استخدام الـ Cubit المُمرَّر
+                        if (existing == null) {
+                          await categoriesCubit.createCategory(
+                            name: nameController.text.trim(),
+                            description: descController.text.trim(),
+                            imageUrl: imageUrl,
+                          );
+                        } else {
+                          await categoriesCubit.updateCategory(
+                            id: existing.id,
+                            name: nameController.text.trim(),
+                            description: descController.text.trim(),
+                            imageUrl: imageUrl,
+                          );
+                        }
+                        if (dialogContext.mounted) {
+                          Navigator.pop(dialogContext);
+                        }
+                      },
+                      child: Text(existing == null ? 'Create' : 'Update'),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         );
       },
