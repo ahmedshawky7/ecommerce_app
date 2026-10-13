@@ -45,57 +45,91 @@ class _DashboardPageState extends State<DashboardPage> {
         }
         if (state is DashboardLoaded) {
           final stats = state.stats;
-          final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+          final currencyFormat = NumberFormat.currency(
+            symbol: '\$',
+            decimalDigits: 2,
+          );
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Overview',
-                    style: GoogleFonts.poppins(
-                        fontSize: 20, fontWeight: FontWeight.w600)),
+                Text(
+                  'Overview',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 // Stats Grid
-                GridView.count(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 2.2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    StatCard(
-                      title: 'Total Revenue',
-                      value: currencyFormat.format(stats.totalRevenue),
-                      icon: Icons.attach_money,
-                      color: const Color(0xFF4CAF50),
-                    ),
-                    StatCard(
-                      title: 'Total Orders',
-                      value: stats.totalOrders.toString(),
-                      icon: Icons.shopping_cart_outlined,
-                      color: const Color(0xFF2196F3),
-                    ),
-                    StatCard(
-                      title: 'Customers',
-                      value: stats.totalCustomers.toString(),
-                      icon: Icons.people_outline,
-                      color: const Color(0xFF9C27B0),
-                    ),
-                    StatCard(
-                      title: 'Products',
-                      value: stats.totalProducts.toString(),
-                      icon: Icons.inventory_2_outlined,
-                      color: const Color(0xFFFF9800),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Determine columns based on available width
+                    int crossAxisCount;
+                    double aspectRatio;
+
+                    if (constraints.maxWidth < 600) {
+                      // Mobile
+                      crossAxisCount = 2;
+                      aspectRatio = 1.6;
+                    } else if (constraints.maxWidth < 1000) {
+                      // Tablet
+                      crossAxisCount = 2;
+                      aspectRatio = 2.2;
+                    } else {
+                      // Desktop
+                      crossAxisCount = 4;
+                      aspectRatio = 2.2;
+                    }
+
+                    return GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: aspectRatio,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        StatCard(
+                          title: 'Total Revenue',
+                          value: currencyFormat.format(stats.totalRevenue),
+                          icon: Icons.attach_money,
+                          color: const Color(0xFF4CAF50),
+                        ),
+                        StatCard(
+                          title: 'Total Orders',
+                          value: stats.totalOrders.toString(),
+                          icon: Icons.shopping_cart_outlined,
+                          color: const Color(0xFF2196F3),
+                        ),
+                        StatCard(
+                          title: 'Customers',
+                          value: stats.totalCustomers.toString(),
+                          icon: Icons.people_outline,
+                          color: const Color(0xFF9C27B0),
+                        ),
+                        StatCard(
+                          title: 'Products',
+                          value: stats.totalProducts.toString(),
+                          icon: Icons.inventory_2_outlined,
+                          color: const Color(0xFFFF9800),
+                        ),
+                      ],
+                    );
+                  },
                 ),
+
                 const SizedBox(height: 24),
                 // Order Status
-                Text('Orders by Status',
-                    style: GoogleFonts.poppins(
-                        fontSize: 18, fontWeight: FontWeight.w600)),
+                Text(
+                  'Orders by Status',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -165,7 +199,9 @@ class _StatusCard extends StatelessWidget {
             Text(
               count.toString(),
               style: GoogleFonts.poppins(
-                  fontSize: 28, fontWeight: FontWeight.bold),
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Text(
               label,
