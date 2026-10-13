@@ -118,75 +118,78 @@ class _UsersPageState extends State<UsersPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Column(
             children: [
-              DataTable(
-                headingRowColor:
-                    MaterialStateProperty.all(const Color(0xFFF5F5F7)),
-                columns: const [
-                  DataColumn(label: Text('#')),
-                  DataColumn(label: Text('Username')),
-                  DataColumn(label: Text('Email')),
-                  DataColumn(label: Text('Role')),
-                  DataColumn(label: Text('Status')),
-                  DataColumn(label: Text('Joined')),
-                  DataColumn(label: Text('Actions')),
-                ],
-                rows: state.users.map((user) {
-                  return DataRow(cells: [
-                    DataCell(Text(user.id.toString())),
-                    DataCell(Text(user.username,
-                        style: const TextStyle(fontWeight: FontWeight.w600))),
-                    DataCell(Text(user.email)),
-                    DataCell(Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: user.role == 'ADMIN'
-                            ? const Color(0xFF6C63FF).withOpacity(0.15)
-                            : Colors.grey.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        user.role,
-                        style: TextStyle(
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor:
+                      MaterialStateProperty.all(const Color(0xFFF5F5F7)),
+                  columns: const [
+                    DataColumn(label: Text('#')),
+                    DataColumn(label: Text('Username')),
+                    DataColumn(label: Text('Email')),
+                    DataColumn(label: Text('Role')),
+                    DataColumn(label: Text('Status')),
+                    DataColumn(label: Text('Joined')),
+                    DataColumn(label: Text('Actions')),
+                  ],
+                  rows: state.users.map((user) {
+                    return DataRow(cells: [
+                      DataCell(Text(user.id.toString())),
+                      DataCell(Text(user.username,
+                          style: const TextStyle(fontWeight: FontWeight.w600))),
+                      DataCell(Text(user.email)),
+                      DataCell(Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
                           color: user.role == 'ADMIN'
-                              ? const Color(0xFF6C63FF)
-                              : Colors.grey[700],
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                              ? const Color(0xFF6C63FF).withOpacity(0.15)
+                              : Colors.grey.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      ),
-                    )),
-                    DataCell(Row(
-                      children: [
-                        Icon(
-                          user.isEnabled
-                              ? Icons.check_circle
-                              : Icons.cancel,
-                          color: user.isEnabled ? Colors.green : Colors.red,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          user.isEnabled ? 'Active' : 'Disabled',
+                        child: Text(
+                          user.role,
                           style: TextStyle(
-                            color: user.isEnabled ? Colors.green : Colors.red,
-                            fontSize: 12,
+                            color: user.role == 'ADMIN'
+                                ? const Color(0xFF6C63FF)
+                                : Colors.grey[700],
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ],
-                    )),
-                    DataCell(Text(dateFormat.format(user.createdAt))),
-                    DataCell(
-                      Switch(
-                        value: user.isEnabled,
-                        onChanged: (_) {
-                          context.read<UsersCubit>().toggleStatus(user.id);
-                        },
+                      )),
+                      DataCell(Row(
+                        children: [
+                          Icon(
+                            user.isEnabled
+                                ? Icons.check_circle
+                                : Icons.cancel,
+                            color: user.isEnabled ? Colors.green : Colors.red,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            user.isEnabled ? 'Active' : 'Disabled',
+                            style: TextStyle(
+                              color: user.isEnabled ? Colors.green : Colors.red,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      )),
+                      DataCell(Text(dateFormat.format(user.createdAt))),
+                      DataCell(
+                        Switch(
+                          value: user.isEnabled,
+                          onChanged: (_) {
+                            context.read<UsersCubit>().toggleStatus(user.id);
+                          },
+                        ),
                       ),
-                    ),
-                  ]);
-                }).toList(),
+                    ]);
+                  }).toList(),
+                ),
               ),
               // Pagination
               Padding(

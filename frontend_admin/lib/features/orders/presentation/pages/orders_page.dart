@@ -143,64 +143,67 @@ class _OrdersPageState extends State<OrdersPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Column(
             children: [
-              DataTable(
-                headingRowColor:
-                    MaterialStateProperty.all(const Color(0xFFF5F5F7)),
-                columns: const [
-                  DataColumn(label: Text('#')),
-                  DataColumn(label: Text('Order #')),
-                  DataColumn(label: Text('Customer')),
-                  DataColumn(label: Text('Total')),
-                  DataColumn(label: Text('Status')),
-                  DataColumn(label: Text('Date')),
-                  DataColumn(label: Text('Actions')),
-                ],
-                rows: state.orders.map((order) {
-                  return DataRow(cells: [
-                    DataCell(Text(order.id.toString())),
-                    DataCell(Text(order.orderNumber,
-                        style: const TextStyle(fontWeight: FontWeight.w600))),
-                    DataCell(Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(order.customerName, style: const TextStyle(fontSize: 13)),
-                        Text(order.customerEmail,
-                            style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-                      ],
-                    )),
-                    DataCell(Text(currencyFormat.format(order.totalAmount),
-                        style: const TextStyle(fontWeight: FontWeight.w600))),
-                    DataCell(Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(order.status).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        order.status,
-                        style: TextStyle(
-                          color: _getStatusColor(order.status),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor:
+                      MaterialStateProperty.all(const Color(0xFFF5F5F7)),
+                  columns: const [
+                    DataColumn(label: Text('#')),
+                    DataColumn(label: Text('Order #')),
+                    DataColumn(label: Text('Customer')),
+                    DataColumn(label: Text('Total')),
+                    DataColumn(label: Text('Status')),
+                    DataColumn(label: Text('Date')),
+                    DataColumn(label: Text('Actions')),
+                  ],
+                  rows: state.orders.map((order) {
+                    return DataRow(cells: [
+                      DataCell(Text(order.id.toString())),
+                      DataCell(Text(order.orderNumber,
+                          style: const TextStyle(fontWeight: FontWeight.w600))),
+                      DataCell(Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(order.customerName, style: const TextStyle(fontSize: 13)),
+                          Text(order.customerEmail,
+                              style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                        ],
+                      )),
+                      DataCell(Text(currencyFormat.format(order.totalAmount),
+                          style: const TextStyle(fontWeight: FontWeight.w600))),
+                      DataCell(Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(order.status).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      ),
-                    )),
-                    DataCell(Text(dateFormat.format(order.createdAt))),
-                    DataCell(IconButton(
-                      icon: const Icon(Icons.visibility_outlined, size: 20),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => OrderDetailsPage(orderId: order.id),
+                        child: Text(
+                          order.status,
+                          style: TextStyle(
+                            color: _getStatusColor(order.status),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                           ),
-                        );
-                      },
-                    )),
-                  ]);
-                }).toList(),
+                        ),
+                      )),
+                      DataCell(Text(dateFormat.format(order.createdAt))),
+                      DataCell(IconButton(
+                        icon: const Icon(Icons.visibility_outlined, size: 20),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => OrderDetailsPage(orderId: order.id),
+                            ),
+                          );
+                        },
+                      )),
+                    ]);
+                  }).toList(),
+                ),
               ),
               // Pagination
               Padding(

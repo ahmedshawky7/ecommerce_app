@@ -229,159 +229,162 @@ class _ProductsAdminPageState extends State<ProductsAdminPage> {
           ),
           child: Column(
             children: [
-              DataTable(
-                headingRowColor: MaterialStateProperty.all(
-                  const Color(0xFFF5F5F7),
-                ),
-                columns: const [
-                  DataColumn(label: Text('Image')),
-                  DataColumn(label: Text('Name')),
-                  DataColumn(label: Text('Category')),
-                  DataColumn(label: Text('Price')),
-                  DataColumn(label: Text('Stock')),
-                  DataColumn(label: Text('Actions')),
-                ],
-                rows: state.products.map((product) {
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child:
-                              product.imageUrl != null &&
-                                  product.imageUrl!.isNotEmpty
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: CachedNetworkImage(
-                                    imageUrl: product.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (_, __, ___) => Icon(
-                                      Icons.broken_image_outlined,
-                                      color: Colors.grey[400],
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor: MaterialStateProperty.all(
+                    const Color(0xFFF5F5F7),
+                  ),
+                  columns: const [
+                    DataColumn(label: Text('Image')),
+                    DataColumn(label: Text('Name')),
+                    DataColumn(label: Text('Category')),
+                    DataColumn(label: Text('Price')),
+                    DataColumn(label: Text('Stock')),
+                    DataColumn(label: Text('Actions')),
+                  ],
+                  rows: state.products.map((product) {
+                    return DataRow(
+                      cells: [
+                        DataCell(
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child:
+                                product.imageUrl != null &&
+                                    product.imageUrl!.isNotEmpty
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: CachedNetworkImage(
+                                      imageUrl: product.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorWidget: (_, __, ___) => Icon(
+                                        Icons.broken_image_outlined,
+                                        color: Colors.grey[400],
+                                      ),
                                     ),
+                                  )
+                                : Icon(
+                                    Icons.image_outlined,
+                                    color: Colors.grey[400],
                                   ),
-                                )
-                              : Icon(
-                                  Icons.image_outlined,
-                                  color: Colors.grey[400],
-                                ),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          product.name,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      DataCell(
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6C63FF).withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(20),
+                        ),
+                        DataCell(
+                          Text(
+                            product.name,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          child: Text(
-                            product.categoryName,
-                            style: TextStyle(
-                              color: const Color(0xFF6C63FF),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                        ),
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6C63FF).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              product.categoryName,
+                              style: TextStyle(
+                                color: const Color(0xFF6C63FF),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      DataCell(
-                        Text(
-                          currencyFormat.format(product.price),
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        DataCell(
+                          Text(
+                            currencyFormat.format(product.price),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                         ),
-                      ),
-                      DataCell(
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: product.stockQuantity > 10
-                                ? Colors.green.withOpacity(0.15)
-                                : product.stockQuantity > 0
-                                ? Colors.orange.withOpacity(0.15)
-                                : Colors.red.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '${product.stockQuantity}',
-                            style: TextStyle(
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
                               color: product.stockQuantity > 10
-                                  ? Colors.green
+                                  ? Colors.green.withOpacity(0.15)
                                   : product.stockQuantity > 0
-                                  ? Colors.orange
-                                  : Colors.red,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                                  ? Colors.orange.withOpacity(0.15)
+                                  : Colors.red.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '${product.stockQuantity}',
+                              style: TextStyle(
+                                color: product.stockQuantity > 10
+                                    ? Colors.green
+                                    : product.stockQuantity > 0
+                                    ? Colors.orange
+                                    : Colors.red,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      DataCell(
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit_outlined,
-                                size: 20,
-                                color: Colors.blue,
-                              ),
-                              onPressed: () async {
-                                final productsCubit = context
-                                    .read<AdminProductsCubit>();
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => MultiBlocProvider(
-                                      providers: [
-                                        BlocProvider.value(
-                                          value: productsCubit,
-                                        ),
-                                        BlocProvider(
-                                          create: (_) => AdminCategoriesCubit(
-                                            AdminCategoriesRepository(),
-                                          )..loadCategories(),
-                                        ),
-                                      ],
-                                      child: ProductFormPage(product: product),
+                        DataCell(
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  size: 20,
+                                  color: Colors.blue,
+                                ),
+                                onPressed: () async {
+                                  final productsCubit = context
+                                      .read<AdminProductsCubit>();
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => MultiBlocProvider(
+                                        providers: [
+                                          BlocProvider.value(
+                                            value: productsCubit,
+                                          ),
+                                          BlocProvider(
+                                            create: (_) => AdminCategoriesCubit(
+                                              AdminCategoriesRepository(),
+                                            )..loadCategories(),
+                                          ),
+                                        ],
+                                        child: ProductFormPage(product: product),
+                                      ),
                                     ),
-                                  ),
-                                );
-                                if (result == true && context.mounted) {
-                                  productsCubit.loadProducts();
-                                }
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                size: 20,
-                                color: Colors.red,
+                                  );
+                                  if (result == true && context.mounted) {
+                                    productsCubit.loadProducts();
+                                  }
+                                },
                               ),
-                              onPressed: () =>
-                                  _confirmDelete(product.id, product.name),
-                            ),
-                          ],
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () =>
+                                    _confirmDelete(product.id, product.name),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                }).toList(),
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
               // Pagination
               Padding(
