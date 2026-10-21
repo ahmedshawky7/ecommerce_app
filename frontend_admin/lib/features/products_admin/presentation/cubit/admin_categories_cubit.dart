@@ -33,6 +33,7 @@ class AdminCategoriesCubit extends Cubit<AdminCategoriesState> {
       await loadCategories();
     } catch (e) {
       emit(AdminCategoriesError(e.toString()));
+      await loadCategories();
     }
   }
 
@@ -53,6 +54,7 @@ class AdminCategoriesCubit extends Cubit<AdminCategoriesState> {
       await loadCategories();
     } catch (e) {
       emit(AdminCategoriesError(e.toString()));
+      await loadCategories(); // ⚡ إعادة تحميل القائمة
     }
   }
 
@@ -63,6 +65,7 @@ class AdminCategoriesCubit extends Cubit<AdminCategoriesState> {
       await loadCategories();
     } catch (e) {
       emit(AdminCategoriesError(e.toString()));
+      await loadCategories(); // ⚡ إعادة تحميل القائمة
     }
   }
 }

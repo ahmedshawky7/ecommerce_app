@@ -53,60 +53,68 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
         ),
         // Categories Chips
-        BlocBuilder<CategoriesCubit, CategoriesState>(
-          builder: (context, state) {
-            if (state is CategoriesLoaded) {
-              return SizedBox(
-                height: 50,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: state.categories.length + 1,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final currentProductsState = context.read<ProductsCubit>().state;
-                    final selectedId = currentProductsState is ProductsLoaded
-                        ? currentProductsState.selectedCategoryId
-                        : null;
+        BlocBuilder<ProductsCubit, ProductsState>(
+          builder: (context, prodState) {
+            return BlocBuilder<CategoriesCubit, CategoriesState>(
+              builder: (context, catState) {
+                if (catState is CategoriesLoaded) {
+                  final selectedId = prodState is ProductsLoaded
+                      ? prodState.selectedCategoryId
+                      : null;
 
-                    if (index == 0) {
-                      final isAll = selectedId == null;
-                      return ChoiceChip(
-                        label: const Text('All'),
-                        selected: isAll,
-                        onSelected: (_) =>
-                            context.read<ProductsCubit>().filterByCategory(null),
-                        selectedColor:
-                            const Color(0xFF6C63FF).withOpacity(0.2),
-                        labelStyle: GoogleFonts.poppins(
-                          color: isAll ? const Color(0xFF6C63FF) : null,
-                          fontWeight:
-                              isAll ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      );
-                    }
+                  return SizedBox(
+                    height: 50,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: catState.categories.length + 1,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          final isAll = selectedId == null;
+                          return ChoiceChip(
+                            label: const Text('All'),
+                            selected: isAll,
+                            onSelected: (_) => context
+                                .read<ProductsCubit>()
+                                .filterByCategory(null),
+                            selectedColor: const Color(
+                              0xFF6C63FF,
+                            ).withOpacity(0.2),
+                            labelStyle: GoogleFonts.poppins(
+                              color: isAll ? const Color(0xFF6C63FF) : null,
+                              fontWeight: isAll
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          );
+                        }
 
-                    final cat = state.categories[index - 1];
-                    final isSelected = selectedId == cat.id;
-                    return ChoiceChip(
-                      label: Text(cat.name),
-                      selected: isSelected,
-                      onSelected: (_) => context
-                          .read<ProductsCubit>()
-                          .filterByCategory(cat.id),
-                      selectedColor:
-                          const Color(0xFF6C63FF).withOpacity(0.2),
-                      labelStyle: GoogleFonts.poppins(
-                        color: isSelected ? const Color(0xFF6C63FF) : null,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                    );
-                  },
-                ),
-              );
-            }
-            return const SizedBox(height: 50);
+                        final cat = catState.categories[index - 1];
+                        final isSelected = selectedId == cat.id;
+                        return ChoiceChip(
+                          label: Text(cat.name),
+                          selected: isSelected,
+                          onSelected: (_) => context
+                              .read<ProductsCubit>()
+                              .filterByCategory(cat.id),
+                          selectedColor: const Color(
+                            0xFF6C63FF,
+                          ).withOpacity(0.2),
+                          labelStyle: GoogleFonts.poppins(
+                            color: isSelected ? const Color(0xFF6C63FF) : null,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
+                return const SizedBox(height: 50);
+              },
+            );
           },
         ),
         const SizedBox(height: 8),
@@ -126,10 +134,13 @@ class _ProductsPageState extends State<ProductsPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 12),
-                        Text('No products found',
-                            style: GoogleFonts.poppins()),
+                        Text('No products found', style: GoogleFonts.poppins()),
                       ],
                     ),
                   );
