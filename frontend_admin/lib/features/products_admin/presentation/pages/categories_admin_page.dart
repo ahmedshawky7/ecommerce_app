@@ -20,27 +20,31 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
     context.read<AdminCategoriesCubit>().loadCategories();
   }
 
-   void _showCategoryDialog({dynamic existing}) {
+  void _showCategoryDialog({dynamic existing}) {
     final nameController = TextEditingController(text: existing?.name ?? '');
-    final descController =
-        TextEditingController(text: existing?.description ?? '');
-    String? imageUrl = existing?.imageUrl;
-
-    // ⚡ اقرأ الـ Cubit قبل ما نفتح الـ Dialog
+    final descController = TextEditingController(
+      text: existing?.description ?? '',
+    );
+    final imageUrlController = TextEditingController(
+      text: existing?.imageUrl ?? '',
+    );
+    bool isLoading = false;
     final categoriesCubit = context.read<AdminCategoriesCubit>();
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
         return BlocProvider.value(
-          value: categoriesCubit, // ← نمرر الـ Cubit للـ Dialog
+          value: categoriesCubit,
           child: BlocProvider(
             create: (_) => ImageUploadCubit(ImageUploadRepository()),
             child: StatefulBuilder(
               builder: (dialogContext, setDialogState) {
                 return AlertDialog(
-                  title:
-                      Text(existing == null ? 'Add Category' : 'Edit Category'),
+                  title: Text(
+                    existing == null ? 'Add Category' : 'Edit Category',
+                  ),
                   content: SingleChildScrollView(
                     child: SizedBox(
                       width: 400,
@@ -65,13 +69,17 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
                           ),
                           const SizedBox(height: 12),
                           TextField(
-                            controller:
-                                TextEditingController(text: imageUrl),
+                            controller: imageUrlController,
                             decoration: const InputDecoration(
                               labelText: 'Image URL (optional)',
+                              hintText: 'https://images.unsplash.com/...',
                               border: OutlineInputBorder(),
                             ),
-                            onChanged: (v) => imageUrl = v.trim(),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            '⚠️ Use a DIRECT image URL (ending in .jpg/.png). Webpage URLs won\'t work.',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -79,33 +87,52 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
+                      onPressed: isLoading
+                          ? null
+                          : () => Navigator.pop(dialogContext),
                       child: const Text('Cancel'),
                     ),
                     ElevatedButton(
-                      onPressed: () async {
-                        if (nameController.text.trim().isEmpty) return;
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              if (nameController.text.trim().isEmpty) return;
 
-                        // ⚡ استخدام الـ Cubit المُمرَّر
-                        if (existing == null) {
-                          await categoriesCubit.createCategory(
-                            name: nameController.text.trim(),
-                            description: descController.text.trim(),
-                            imageUrl: imageUrl,
-                          );
-                        } else {
-                          await categoriesCubit.updateCategory(
-                            id: existing.id,
-                            name: nameController.text.trim(),
-                            description: descController.text.trim(),
-                            imageUrl: imageUrl,
-                          );
-                        }
-                        if (dialogContext.mounted) {
-                          Navigator.pop(dialogContext);
-                        }
-                      },
-                      child: Text(existing == null ? 'Create' : 'Update'),
+                              setDialogState(() => isLoading = true);
+
+                              if (existing == null) {
+                                await categoriesCubit.createCategory(
+                                  name: nameController.text.trim(),
+                                  description: descController.text.trim(),
+                                  imageUrl: imageUrlController.text.trim(),
+                                );
+                              } else {
+                                await categoriesCubit.updateCategory(
+                                  id: existing.id,
+                                  name: nameController.text.trim(),
+                                  description: descController.text.trim(),
+                                  imageUrl: imageUrlController.text.trim(),
+                                );
+                              }
+
+                              if (!dialogContext.mounted) return;
+                              setDialogState(() => isLoading = false);
+
+                              final state = categoriesCubit.state;
+                              if (state is! AdminCategoriesError) {
+                                Navigator.pop(dialogContext);
+                              }
+                            },
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(existing == null ? 'Create' : 'Update'),
                     ),
                   ],
                 );
@@ -151,7 +178,10 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
         }
         if (state is AdminCategoryActionSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       },
@@ -179,7 +209,9 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
                       backgroundColor: const Color(0xFF6C63FF),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 18),
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -235,8 +267,9 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
         itemBuilder: (context, index) {
           final category = state.categories[index];
           return Card(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -249,7 +282,8 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
                       color: const Color(0xFF6C63FF).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: category.imageUrl != null &&
+                    child:
+                        category.imageUrl != null &&
                             category.imageUrl!.isNotEmpty
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
@@ -312,14 +346,20 @@ class _CategoriesAdminPageState extends State<CategoriesAdminPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit_outlined,
-                            size: 20, color: Colors.blue),
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          size: 20,
+                          color: Colors.blue,
+                        ),
                         onPressed: () =>
                             _showCategoryDialog(existing: category),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            size: 20, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: 20,
+                          color: Colors.red,
+                        ),
                         onPressed: () =>
                             _confirmDelete(category.id, category.name),
                       ),
