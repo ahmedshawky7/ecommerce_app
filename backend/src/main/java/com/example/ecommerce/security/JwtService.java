@@ -1,24 +1,27 @@
 package com.example.ecommerce.security;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.crypto.SecretKey;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-
 import com.example.ecommerce.entity.User;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class JwtService {
+
+    private static final String CLAIM_TYPE = "type";
+    private static final String TYPE_ACCESS = "ACCESS";
+    private static final String TYPE_REFRESH = "REFRESH";
+
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
@@ -32,25 +35,28 @@ public class JwtService {
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
-    // ============ Access Token ============
     public String generateToken(User user) {
-        return buildToken(new HashMap<>(), user, accessTokenExpiration);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(CLAIM_TYPE, TYPE_ACCESS);
+        claims.put("role", user.getRole().name());
+        claims.put("userId", user.getId());
+        return buildToken(claims, user, accessTokenExpiration);
     }
 
-    // ============ Refresh Token ============
     public String generateRefreshToken(User user) {
-        return buildToken(new HashMap<>(), user, refreshTokenExpiration);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(CLAIM_TYPE, TYPE_REFRESH);
+        return buildToken(claims, user, refreshTokenExpiration);
     }
 
-    // ============ Helpers ============
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
-        var issuedAt = new Date(System.currentTimeMillis());
-        var expirationDate = new Date(System.currentTimeMillis() + expiration);
+        long now = System.currentTimeMillis();
         return Jwts.builder()
                 .claims(extraClaims)
+                .id(UUID.randomUUID().toString())
                 .subject(userDetails.getUsername())
-                .issuedAt(issuedAt)
-                .expiration(expirationDate)
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + expiration))
                 .signWith(secretKey)
                 .compact();
     }
@@ -59,13 +65,24 @@ public class JwtService {
         return extractAllClaims(token).getSubject();
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    public boolean isAccessTokenValid(String token, UserDetails userDetails) {
+        Claims claims = extractAllClaims(token);
+        String tokenType = claims.get(CLAIM_TYPE, String.class);
+        return TYPE_ACCESS.equals(tokenType)
+                && claims.getSubject().equals(userDetails.getUsername())
+                && !claims.getExpiration().before(new Date());
     }
 
-    private boolean isTokenExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
+    public boolean isRefreshTokenValid(String token, UserDetails userDetails) {
+        Claims claims = extractAllClaims(token);
+        String tokenType = claims.get(CLAIM_TYPE, String.class);
+        return TYPE_REFRESH.equals(tokenType)
+                && claims.getSubject().equals(userDetails.getUsername())
+                && !claims.getExpiration().before(new Date());
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        return isAccessTokenValid(token, userDetails);
     }
 
     private Claims extractAllClaims(String token) {

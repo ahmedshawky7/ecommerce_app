@@ -8,20 +8,23 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record AdminOrderResponse(
-    Long id,
-    String orderNumber,
-    BigDecimal totalAmount,
-    OrderStatus status,
-    String shippingAddress,
-    String phone,
-    String paymentMethod,
-    String paymentIntentId,
-    // Customer info
-    Long customerId,
-    String customerName,
-    String customerEmail,
-    // Items
-    List<OrderItemResponse> items,
-    LocalDateTime createdAt,
-    LocalDateTime updatedAt
+        Long id,
+        String orderNumber,
+        BigDecimal subtotalAmount,
+        BigDecimal discountAmount,
+        BigDecimal shippingAmount,
+        BigDecimal taxAmount,
+        String couponCode,
+        BigDecimal totalAmount,
+        OrderStatus status,
+        String shippingAddress,
+        String phone,
+        String paymentMethod,
+        String paymentIntentId,
+        Long customerId,
+        String customerName,
+        String customerEmail,
+        List<OrderItemResponse> items,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) implements Serializable {}

@@ -11,6 +11,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,18 +23,30 @@ public class CategoryService {
     private final ProductRepository productRepository;
 
     @Cacheable(value = "categories", key = "'all'")
+    @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        List<Object[]> rows = categoryRepository.findAllWithActiveProductCountRaw();
+        List<CategoryResponse> result = new ArrayList<>(rows.size());
+        for (Object[] row : rows) {
+            result.add(CategoryResponse.builder()
+                    .id(((Number) row[0]).longValue())
+                    .name((String) row[1])
+                    .description((String) row[2])
+                    .imageUrl((String) row[3])
+                    .createdAt((LocalDateTime) row[4])
+                    .productCount(row[5] != null ? ((Number) row[5]).longValue() : 0L)
+                    .build());
+        }
+        return result;
     }
 
     @Cacheable(value = "categories", key = "#id")
+    @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
-        return toResponse(category);
+        long activeCount = productRepository.countByCategoryIdAndIsActiveTrue(category.getId());
+        return toResponse(category, activeCount);
     }
 
     @Transactional
@@ -49,7 +63,7 @@ public class CategoryService {
                 .build();
 
         Category saved = categoryRepository.save(category);
-        return toResponse(saved);
+        return toResponse(saved, 0L);
     }
 
     @Transactional
@@ -67,7 +81,8 @@ public class CategoryService {
         category.setImageUrl(request.imageUrl());
 
         Category updated = categoryRepository.save(category);
-        return toResponse(updated);
+        long activeCount = productRepository.countByCategoryIdAndIsActiveTrue(updated.getId());
+        return toResponse(updated, activeCount);
     }
 
     @Transactional
@@ -83,15 +98,14 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
-    private CategoryResponse toResponse(Category category) {
-        long productCount = productRepository.countByCategoryId(category.getId());
-        return new CategoryResponse(
-                category.getId(),
-                category.getName(),
-                category.getDescription(),
-                category.getImageUrl(),
-                category.getCreatedAt(),
-                productCount
-        );
+    private CategoryResponse toResponse(Category category, long productCount) {
+        return CategoryResponse.builder()
+                .id(category.getId())
+                .name(category.getName())
+                .description(category.getDescription())
+                .imageUrl(category.getImageUrl())
+                .createdAt(category.getCreatedAt())
+                .productCount(productCount)
+                .build();
     }
 }

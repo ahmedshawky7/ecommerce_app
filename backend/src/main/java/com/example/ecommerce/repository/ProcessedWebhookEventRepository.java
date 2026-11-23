@@ -1,0 +1,8 @@
+package com.example.ecommerce.repository;
+
+import com.example.ecommerce.entity.ProcessedWebhookEvent;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProcessedWebhookEventRepository extends JpaRepository<ProcessedWebhookEvent, Long> {
+    boolean existsByEventId(String eventId);
+}

@@ -1,12 +1,23 @@
 package com.example.ecommerce.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
-public record CartResponse(
-    Long id,
-    List<CartItemResponse> items,
-    Integer totalItems,
-    BigDecimal totalPrice
-) implements Serializable {}
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CartResponse implements Serializable {
+    private Long id;
+    @Builder.Default
+    private List<CartItemResponse> items = new ArrayList<>();
+    private Integer totalItems;
+    private BigDecimal totalPrice;
+}

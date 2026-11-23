@@ -1,15 +1,18 @@
 package com.example.ecommerce.controller;
 
+import com.example.ecommerce.dto.PagedResponse;
 import com.example.ecommerce.dto.ProductRequest;
 import com.example.ecommerce.dto.ProductResponse;
 import com.example.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/products")
@@ -18,11 +21,22 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // ============ Public Endpoints ============
-
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
+    public ResponseEntity<PagedResponse<ProductResponse>> getAllProducts(Pageable pageable) {
         return ResponseEntity.ok(productService.getAllProducts(pageable));
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<PagedResponse<ProductResponse>> filterProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) BigDecimal minRating,
+            @RequestParam(required = false) Boolean inStockOnly,
+            Pageable pageable) {
+        return ResponseEntity.ok(productService.filterProducts(
+                keyword, categoryId, minPrice, maxPrice, minRating, inStockOnly, pageable));
     }
 
     @GetMapping("/{id}")
@@ -31,44 +45,39 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<Page<ProductResponse>> getProductsByCategory(
+    public ResponseEntity<PagedResponse<ProductResponse>> getProductsByCategory(
             @PathVariable Long categoryId,
             Pageable pageable) {
         return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<ProductResponse>> searchProducts(
+    public ResponseEntity<PagedResponse<ProductResponse>> searchProducts(
             @RequestParam String keyword,
             Pageable pageable) {
         return ResponseEntity.ok(productService.searchProducts(keyword, pageable));
     }
 
-    // ============ Seller Endpoints ============
-
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponse> createProduct(
             @Valid @RequestBody ProductRequest request,
             Authentication authentication) {
-        String sellerEmail = authentication.getName();
-        return ResponseEntity.ok(productService.createProduct(request, sellerEmail));
+        return ResponseEntity.ok(productService.createProduct(request, authentication.getName()));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
-            @Valid @RequestBody ProductRequest request,
-            Authentication authentication) {
-        String sellerEmail = authentication.getName();
-        return ResponseEntity.ok(productService.updateProduct(id, request, sellerEmail));
+            @Valid @RequestBody ProductRequest request) {
+        return ResponseEntity.ok(productService.updateProduct(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(
-            @PathVariable Long id,
-            Authentication authentication) {
-        String sellerEmail = authentication.getName();
-        productService.deleteProduct(id, sellerEmail);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 }

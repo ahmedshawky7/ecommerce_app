@@ -1,29 +1,31 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.dto.AdminOrderResponse;
-import com.example.ecommerce.dto.DashboardStatsResponse;
-import com.example.ecommerce.dto.LowStockProductResponse;
-import com.example.ecommerce.dto.OrderItemResponse;
-import com.example.ecommerce.dto.TopSellingProductResponse;
-import com.example.ecommerce.dto.UserManagementResponse;
+import com.example.ecommerce.dto.*;
 import com.example.ecommerce.entity.Order;
 import com.example.ecommerce.entity.OrderStatus;
+import com.example.ecommerce.entity.Role;
 import com.example.ecommerce.entity.User;
 import com.example.ecommerce.repository.OrderRepository;
 import com.example.ecommerce.repository.ProductRepository;
+import com.example.ecommerce.repository.RefreshTokenRepository;
 import com.example.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import java.time.LocalDate;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.ecommerce.dto.SalesAnalyticsResponse;
-import com.example.ecommerce.dto.RevenueByCategoryResponse;
-import java.time.LocalDateTime;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,8 @@ public class AdminService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public DashboardStatsResponse getDashboardStats() {
@@ -49,24 +53,21 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public List<TopSellingProductResponse> getTopSellingProducts(int limit) {
-        Pageable pageable = PageRequest.of(0, limit);
-        return orderRepository.findTopSellingProducts(pageable);
+        return orderRepository.findTopSellingProducts(PageRequest.of(0, limit));
     }
 
     @Transactional(readOnly = true)
     public List<LowStockProductResponse> getLowStockProducts(int threshold, int limit) {
-        Pageable pageable = PageRequest.of(0, limit);
-        return productRepository.findLowStockProducts(threshold, pageable);
+        return productRepository.findLowStockProducts(threshold, PageRequest.of(0, limit));
     }
-
-    // ============ Order Management ============
 
     @Transactional(readOnly = true)
     public Page<AdminOrderResponse> searchOrders(
             OrderStatus status, LocalDateTime from, LocalDateTime to,
             String keyword, Pageable pageable) {
-        return orderRepository.adminSearchOrders(status, from, to, keyword, pageable)
-                .map(this::toAdminOrderResponse);
+        String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        Page<Long> idPage = orderRepository.adminSearchOrderIds(status, from, to, normalizedKeyword, pageable);
+        return fetchAdminOrdersPage(idPage, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -78,21 +79,34 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public Page<AdminOrderResponse> getOrdersByUser(Long userId, Pageable pageable) {
-        // تأكد إن المستخدم موجود
         if (!userRepository.existsById(userId)) {
             throw new IllegalArgumentException("User not found");
         }
-        return orderRepository.adminFindOrdersByUser(userId, pageable)
-                .map(this::toAdminOrderResponse);
+        Page<Long> idPage = orderRepository.findOrderIdsByUserId(userId, pageable);
+        return fetchAdminOrdersPage(idPage, pageable);
     }
 
-        // ============ User Management ============
-    
+    private Page<AdminOrderResponse> fetchAdminOrdersPage(Page<Long> idPage, Pageable pageable) {
+        if (idPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Map<Long, Order> ordersById = orderRepository.findAllByIdInWithAllDetails(idPage.getContent()).stream()
+                .collect(Collectors.toMap(Order::getId, Function.identity()));
+
+        List<AdminOrderResponse> responses = idPage.getContent().stream()
+                .map(ordersById::get)
+                .filter(Objects::nonNull)
+                .map(this::toAdminOrderResponse)
+                .toList();
+
+        return new PageImpl<>(responses, pageable, idPage.getTotalElements());
+    }
+
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<UserManagementResponse> searchUsers(
-            String keyword, com.example.ecommerce.entity.Role role, 
-            org.springframework.data.domain.Pageable pageable) {
-        return userRepository.adminSearchUsers(keyword, role, pageable)
+    public Page<UserManagementResponse> searchUsers(String keyword, Role role, Pageable pageable) {
+        String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        return userRepository.adminSearchUsers(normalizedKeyword, role, pageable)
                 .map(this::toUserResponse);
     }
 
@@ -104,15 +118,32 @@ public class AdminService {
     }
 
     @Transactional
-    public UserManagementResponse toggleUserStatus(Long id) {
+    public UserManagementResponse toggleUserStatus(Long id, String currentAdminEmail) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
-        // منع تعطيل نفسك (لو كنت Admin)
-        user.setEnabled(!user.isEnabled());
+
+        if (user.getEmail().equals(currentAdminEmail)) {
+            throw new IllegalArgumentException("You cannot disable your own account");
+        }
+
+        boolean oldStatus = user.isEnabled();
+        boolean newStatus = !oldStatus;
+        user.setEnabled(newStatus);
         userRepository.save(user);
-        
-        System.out.println("✅ User " + user.getEmail() + " status changed to: " + user.isEnabled());
+
+        if (!newStatus) {
+            refreshTokenRepository.revokeAllByUserId(user.getId());
+        }
+
+        auditService.log(
+                "USER_STATUS_TOGGLED",
+                "USER",
+                user.getId(),
+                "enabled=" + oldStatus,
+                "enabled=" + newStatus,
+                "Changed status for user: " + user.getEmail()
+        );
+
         return toUserResponse(user);
     }
 
@@ -126,31 +157,25 @@ public class AdminService {
                 user.getCreatedAt()
         );
     }
-        // ============ Sales Analytics ============
 
-      // ============ Sales Analytics ============
-
-     @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<SalesAnalyticsResponse> getDailySales(int days) {
         LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
-        
         return orderRepository.findDailySalesRaw(fromDate).stream()
                 .map(row -> new SalesAnalyticsResponse(
-                        toLocalDate(row[0]),  // ← تعديل: استخدام Method مساعدة
+                        toLocalDate(row[0]),
                         ((Number) row[1]).longValue(),
-                        (java.math.BigDecimal) row[2]
+                        (BigDecimal) row[2]
                 ))
                 .toList();
     }
 
-    // Method مساعدة للتحويل بين أنواع التاريخ المختلفة
     private LocalDate toLocalDate(Object dateObj) {
         if (dateObj == null) return null;
-        if (dateObj instanceof LocalDate) return (LocalDate) dateObj;
-        if (dateObj instanceof java.sql.Date) return ((java.sql.Date) dateObj).toLocalDate();
-        if (dateObj instanceof java.util.Date) {
-            return ((java.util.Date) dateObj).toInstant()
-                    .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        if (dateObj instanceof LocalDate ld) return ld;
+        if (dateObj instanceof java.sql.Date sqlDate) return sqlDate.toLocalDate();
+        if (dateObj instanceof java.util.Date utilDate) {
+            return utilDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         }
         return LocalDate.parse(dateObj.toString());
     }
@@ -162,7 +187,7 @@ public class AdminService {
                         ((Number) row[0]).longValue(),
                         (String) row[1],
                         ((Number) row[2]).longValue(),
-                        (java.math.BigDecimal) row[3]
+                        (BigDecimal) row[3]
                 ))
                 .toList();
     }
@@ -172,6 +197,9 @@ public class AdminService {
                 .map(item -> new OrderItemResponse(
                         item.getId(),
                         item.getProduct().getId(),
+                        item.getVariant() != null ? item.getVariant().getId() : null,
+                        item.getSku(),
+                        item.getVariantLabel(),
                         item.getProductName(),
                         item.getProduct().getImageUrl(),
                         item.getUnitPrice(),
@@ -182,6 +210,11 @@ public class AdminService {
         return new AdminOrderResponse(
                 order.getId(),
                 order.getOrderNumber(),
+                order.getSubtotalAmount() != null ? order.getSubtotalAmount() : order.getTotalAmount(),
+                order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO,
+                order.getShippingAmount() != null ? order.getShippingAmount() : BigDecimal.ZERO,
+                order.getTaxAmount() != null ? order.getTaxAmount() : BigDecimal.ZERO,
+                order.getCouponCode(),
                 order.getTotalAmount(),
                 order.getStatus(),
                 order.getShippingAddress(),

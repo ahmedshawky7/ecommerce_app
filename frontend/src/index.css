@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-canvas: 246 247 249;      /* #F6F7F9 */
+    --bg-surface: 255 255 255;     /* #FFFFFF */
+    --bg-subtle: 240 242 245;      /* #F0F2F5 */
+    --bg-elevated: 255 255 255;    /* #FFFFFF */
+
+    --text-primary: 17 24 39;      /* #111827 */
+    --text-secondary: 75 85 99;    /* #4B5563 */
+    --text-muted: 107 114 128;     /* #6B7280 */
+
+    --border-default: 226 229 235; /* #E2E5EB */
+    --border-strong: 203 210 220;  /* #CBD2DC */
+
+    /* Refined Cobalt Blue Primary Accent */
+    --accent: 37 99 235;           /* #2563EB */
+    --accent-hover: 29 78 216;     /* #1D4ED8 */
+    --accent-soft: 239 246 255;    /* #EFF6FF */
+    --accent-fg: 255 255 255;
+
+    --success: 5 150 105;          /* #059669 */
+    --success-soft: 236 253 245;
+    --warning: 217 119 6;          /* #D97706 */
+    --warning-soft: 255 251 235;
+    --danger: 220 38 38;           /* #DC2626 */
+    --danger-soft: 254 242 242;
+  }
+
+  .dark {
+    /* Balanced Charcoal-Slate Dark Mode (No harsh pure black) */
+    --bg-canvas: 17 20 27;         /* #11141B */
+    --bg-surface: 24 28 38;        /* #181C26 */
+    --bg-subtle: 32 37 50;         /* #202532 */
+    --bg-elevated: 29 34 46;       /* #1D222E */
+
+    --text-primary: 243 244 246;   /* #F3F4F6 */
+    --text-secondary: 180 188 203; /* #B4BCCB */
+    --text-muted: 136 146 166;     /* #8892A6 */
+
+    --border-default: 43 50 66;    /* #2B3242 */
+    --border-strong: 58 67 86;     /* #3A4356 */
+
+    --accent: 59 130 246;          /* #3B82F6 */
+    --accent-hover: 96 165 250;    /* #60A5FA */
+    --accent-soft: 30 58 138;      /* soft translucent base */
+    --accent-fg: 255 255 255;
+
+    --success: 52 211 153;
+    --success-soft: 6 78 59;
+    --warning: 251 191 36;
+    --warning-soft: 120 53 15;
+    --danger: 248 113 113;
+    --danger-soft: 127 29 29;
+  }
+
+  html {
+    font-family: 'Plus Jakarta Sans', 'Cairo', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  html[dir='rtl'] {
+    font-family: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased transition-colors duration-200 overflow-x-hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-subtle;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-line-strong hover:bg-ink-muted;
+  }
+}

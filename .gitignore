@@ -38,3 +38,11 @@ all_code.txt
 
 # Logs
 *.log
+
+# React & Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.vite/
+frontend_code.txt
